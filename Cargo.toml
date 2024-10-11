@@ -1,0 +1,13 @@
+[package]
+name = "stormcastrs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+env_logger = "0.11.5"
+lazy_static = "1.5.0"
+log = "0.4.22"
+ntex = { version = "2.4.1", features = ["tokio"] }
+prometheus = "0.13.4"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_urlencoded = "0.7.1"
