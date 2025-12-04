@@ -413,7 +413,7 @@ impl Metrics {
         let encoder = TextEncoder::new();
         let metric_families = self.registry.gather();
         // Pre-allocate buffer for metrics output.
-        // With 18 gauges * ~200 bytes each (name, help, type, value) = ~3600 bytes minimum.
+        // With 21 gauges * ~200 bytes each (name, help, type, value) = ~4200 bytes minimum.
         // Using 8KB provides headroom for longer metric names and future additions.
         let mut buffer = Vec::with_capacity(8192);
         encoder.encode(&metric_families, &mut buffer)?;
@@ -698,5 +698,37 @@ mod tests {
         // Verify prometheus format
         assert!(output.contains("weather_temperature_fahrenheit"));
         assert!(output.contains("72.5"));
+    }
+
+    #[ntex::test]
+    async fn test_handle_health() {
+        let response = handle_health().await;
+        assert_eq!(response.status(), ntex::http::StatusCode::OK);
+    }
+
+    #[ntex::test]
+    async fn test_handle_weather_data_success() {
+        // Test via the internal parsing logic since Query requires HTTP request context
+        let query_string = "tempf=72.5&humidity=45";
+        let data: WeatherData = serde_urlencoded::from_str(query_string).unwrap();
+
+        // Verify parsing works correctly
+        assert_eq!(data.tempf, Some(72.5));
+        assert_eq!(data.humidity, Some(45));
+
+        // Verify metrics can be updated (uses a fresh registry to avoid global state)
+        let metrics = Metrics::new().expect("failed to create metrics");
+        metrics.update(&data);
+        assert_eq!(metrics.temperature.get(), 72.5);
+        assert_eq!(metrics.humidity.get(), 45.0);
+    }
+
+    #[ntex::test]
+    async fn test_handle_weather_data_invalid() {
+        // Test that invalid data produces a parse error
+        let query_string = "tempf=not_a_number";
+        let result: Result<WeatherData, _> = serde_urlencoded::from_str(query_string);
+
+        assert!(result.is_err());
     }
 }
