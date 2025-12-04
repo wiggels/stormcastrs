@@ -1,7 +1,7 @@
 [package]
 name = "stormcastrs"
 version = "0.2.0"
-edition = "2021"
+edition = "2024"
 description = "Weather station data collector with Prometheus metrics exposition"
 authors = ["Hunter Wigelsworth"]
 license = "MIT"
