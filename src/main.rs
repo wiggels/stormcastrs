@@ -118,7 +118,7 @@ struct WeatherData {
 
     // additional optional fields we don't track but shouldn't fail on
     #[serde(flatten)]
-    _extra: std::collections::HashMap<String, serde_json::Value>,
+    extra: std::collections::HashMap<String, serde_json::Value>,
 }
 
 // ============================================================================
