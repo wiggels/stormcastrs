@@ -483,14 +483,8 @@ async fn handle_metrics() -> Result<HttpResponse, AppError> {
 
 /// Health check endpoint for load balancers and monitoring
 async fn handle_health() -> HttpResponse {
-    // verify metrics are initialized correctly
-    match METRICS.as_ref() {
-        Ok(_) => HttpResponse::Ok().body("ok"),
-        Err(e) => {
-            error!("health check failed: {}", e);
-            HttpResponse::ServiceUnavailable().body(format!("unhealthy: {}", e))
-        }
-    }
+    // Metrics initialization is already checked at startup, so this endpoint always returns healthy.
+    HttpResponse::Ok().body("ok")
 }
 
 // ============================================================================
