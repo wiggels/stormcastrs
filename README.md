@@ -2,9 +2,16 @@
 
 A blazing-fast weather station data collector written in Rust. Receives data from personal weather stations and exposes metrics in Prometheus format for monitoring, alerting, and visualization.
 
+## Compatibility
+
+Tested and verified with:
+- **Ambient Weather WS-2000**
+
+Other stations using similar query parameter formats (Ecowitt, etc.) may work but are untested.
+
 ## Features
 
-- **Zero-config ingestion** - Drop-in compatible with Ambient Weather, Ecowitt, and similar stations
+- **Zero-config ingestion** - Works out of the box with compatible weather stations
 - **Prometheus-native** - First-class `/metrics` endpoint for Grafana dashboards and alerts
 - **Production-ready** - Health checks, structured logging, and graceful error handling
 - **Tiny footprint** - Single static binary, minimal memory usage, sub-millisecond response times
