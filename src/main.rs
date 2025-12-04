@@ -8,7 +8,7 @@
 //!   - GET /metrics   - Prometheus metrics endpoint
 //!   - GET /health    - Health check endpoint
 
-use log::{debug, error, info};
+use tracing::{debug, error, info};
 use ntex::web::{self, HttpResponse};
 use once_cell::sync::Lazy;
 use prometheus::{Encoder, Gauge, Registry, TextEncoder};
@@ -502,8 +502,12 @@ async fn main() -> Result<(), AppError> {
     // load configuration from environment
     let config = Config::from_env();
 
-    // initialize logging (respects RUST_LOG env var)
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(&config.log_level))
+    // initialize tracing subscriber (respects RUST_LOG env var)
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new(&config.log_level)),
+        )
         .init();
 
     // eagerly initialize metrics to catch registration errors at startup
