@@ -409,7 +409,10 @@ impl Metrics {
     fn encode(&self) -> Result<Vec<u8>, AppError> {
         let encoder = TextEncoder::new();
         let metric_families = self.registry.gather();
-        let mut buffer = Vec::with_capacity(4096);  // pre-allocate reasonable size
+        // Pre-allocate 8192 bytes for metrics output.
+        // Calculation: 18 gauges * ~200 bytes each = ~3600 bytes minimum,
+        // but allow for longer metric names/help texts and future growth.
+        let mut buffer = Vec::with_capacity(8192);
         encoder.encode(&metric_families, &mut buffer)?;
         Ok(buffer)
     }
