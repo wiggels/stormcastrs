@@ -8,13 +8,13 @@
 //!   - GET /metrics   - Prometheus metrics endpoint
 //!   - GET /health    - Health check endpoint
 
-use tracing::{debug, error, info};
 use ntex::web::{self, HttpResponse};
 use once_cell::sync::Lazy;
 use prometheus::{Encoder, Gauge, Registry, TextEncoder};
 use serde::Deserialize;
 use std::env;
 use thiserror::Error;
+use tracing::{debug, error, info};
 
 // ============================================================================
 // Configuration
@@ -44,6 +44,7 @@ impl Config {
 
 /// Application-level errors with descriptive messages
 #[derive(Debug, Error)]
+#[allow(clippy::enum_variant_names)]
 enum AppError {
     #[error("failed to parse weather data: {0}")]
     ParseError(#[from] serde_urlencoded::de::Error),
@@ -67,7 +68,7 @@ enum AppError {
 /// HTTP response conversion for AppError - returns appropriate status codes
 impl web::error::WebResponseError for AppError {
     fn error_response(&self, _: &web::HttpRequest) -> HttpResponse {
-        error!("{}", self);  // log all errors
+        error!("{}", self); // log all errors
 
         match self {
             AppError::ParseError(_) | AppError::SerializeError(_) => {
@@ -90,33 +91,33 @@ impl web::error::WebResponseError for AppError {
 #[derive(Debug, Deserialize, Default)]
 struct WeatherData {
     // outdoor sensors
-    tempf: Option<f32>,           // outdoor temperature (fahrenheit)
-    humidity: Option<u8>,         // outdoor humidity (0-100%)
-    windspeedmph: Option<f32>,    // current wind speed (mph)
-    windgustmph: Option<f32>,     // current wind gust (mph)
-    maxdailygust: Option<f32>,    // max gust today (mph)
-    winddir: Option<u16>,         // wind direction (0-359 degrees)
-    winddir_avg10m: Option<u16>,  // wind direction 10-min avg (degrees)
-    uv: Option<u8>,               // uv index (0-15+)
-    solarradiation: Option<f32>,  // solar radiation (W/m^2)
+    tempf: Option<f32>,          // outdoor temperature (fahrenheit)
+    humidity: Option<u8>,        // outdoor humidity (0-100%)
+    windspeedmph: Option<f32>,   // current wind speed (mph)
+    windgustmph: Option<f32>,    // current wind gust (mph)
+    maxdailygust: Option<f32>,   // max gust today (mph)
+    winddir: Option<u16>,        // wind direction (0-359 degrees)
+    winddir_avg10m: Option<u16>, // wind direction 10-min avg (degrees)
+    uv: Option<u8>,              // uv index (0-15+)
+    solarradiation: Option<f32>, // solar radiation (W/m^2)
 
     // rainfall totals (inches)
-    hourlyrainin: Option<f32>,    // rain in the last hour
-    eventrainin: Option<f32>,     // rain for current event
-    dailyrainin: Option<f32>,     // rain today
-    weeklyrainin: Option<f32>,    // rain this week
-    monthlyrainin: Option<f32>,   // rain this month
-    yearlyrainin: Option<f32>,    // rain this year
+    hourlyrainin: Option<f32>,  // rain in the last hour
+    eventrainin: Option<f32>,   // rain for current event
+    dailyrainin: Option<f32>,   // rain today
+    weeklyrainin: Option<f32>,  // rain this week
+    monthlyrainin: Option<f32>, // rain this month
+    yearlyrainin: Option<f32>,  // rain this year
 
     // indoor sensors
-    tempinf: Option<f32>,         // indoor temperature (fahrenheit)
-    humidityin: Option<u8>,       // indoor humidity (0-100%)
-    baromrelin: Option<f32>,      // relative barometric pressure (inHg)
-    baromabsin: Option<f32>,      // absolute barometric pressure (inHg)
+    tempinf: Option<f32>,    // indoor temperature (fahrenheit)
+    humidityin: Option<u8>,  // indoor humidity (0-100%)
+    baromrelin: Option<f32>, // relative barometric pressure (inHg)
+    baromabsin: Option<f32>, // absolute barometric pressure (inHg)
 
     // battery status (typically 0=low, 1=ok)
-    battout: Option<u8>,          // outdoor sensor battery
-    battin: Option<u8>,           // indoor sensor battery
+    battout: Option<u8>, // outdoor sensor battery
+    battin: Option<u8>,  // indoor sensor battery
 
     // captures additional fields we don't track but shouldn't fail on
     #[serde(flatten)]
@@ -133,15 +134,15 @@ struct Metrics {
     registry: Registry,
 
     // outdoor weather metrics
-    temperature: Gauge,         // fahrenheit, 1 decimal
-    humidity: Gauge,            // percentage, whole number
-    wind_speed: Gauge,          // mph, 2 decimals
-    wind_gust: Gauge,           // mph, 2 decimals
-    max_daily_gust: Gauge,      // mph, 2 decimals
-    wind_direction: Gauge,      // degrees, whole number
-    wind_direction_avg: Gauge,  // degrees, whole number (10-min avg)
-    uv_index: Gauge,            // index, whole number
-    solar_radiation: Gauge,     // W/m^2, 2 decimals
+    temperature: Gauge,        // fahrenheit, 1 decimal
+    humidity: Gauge,           // percentage, whole number
+    wind_speed: Gauge,         // mph, 2 decimals
+    wind_gust: Gauge,          // mph, 2 decimals
+    max_daily_gust: Gauge,     // mph, 2 decimals
+    wind_direction: Gauge,     // degrees, whole number
+    wind_direction_avg: Gauge, // degrees, whole number (10-min avg)
+    uv_index: Gauge,           // index, whole number
+    solar_radiation: Gauge,    // W/m^2, 2 decimals
 
     // rainfall metrics (all in inches, 3 decimals)
     rain_hourly: Gauge,
@@ -152,26 +153,20 @@ struct Metrics {
     rain_yearly: Gauge,
 
     // indoor metrics
-    temperature_indoor: Gauge,  // fahrenheit, 1 decimal
-    humidity_indoor: Gauge,     // percentage, whole number
-    barometer_relative: Gauge,  // inHg, 3 decimals
-    barometer_absolute: Gauge,  // inHg, 3 decimals
+    temperature_indoor: Gauge, // fahrenheit, 1 decimal
+    humidity_indoor: Gauge,    // percentage, whole number
+    barometer_relative: Gauge, // inHg, 3 decimals
+    barometer_absolute: Gauge, // inHg, 3 decimals
 
     // battery status
-    battery_outdoor: Gauge,     // 0=low, 1=ok
-    battery_indoor: Gauge,      // 0=low, 1=ok
+    battery_outdoor: Gauge, // 0=low, 1=ok
+    battery_indoor: Gauge,  // 0=low, 1=ok
 }
 
 /// Create and register a gauge with the given registry
-fn register_gauge(
-    registry: &Registry,
-    name: &'static str,
-    help: &str,
-) -> Result<Gauge, AppError> {
-    let gauge = Gauge::new(name, help).map_err(|e| AppError::MetricRegistrationError {
-        name,
-        source: e,
-    })?;
+fn register_gauge(registry: &Registry, name: &'static str, help: &str) -> Result<Gauge, AppError> {
+    let gauge = Gauge::new(name, help)
+        .map_err(|e| AppError::MetricRegistrationError { name, source: e })?;
     registry
         .register(Box::new(gauge.clone()))
         .map_err(|e| AppError::MetricRegistrationError { name, source: e })?;
@@ -219,11 +214,7 @@ impl Metrics {
             "weather_wind_direction_avg10m_degrees",
             "10-minute average wind direction in degrees",
         )?;
-        let uv_index = register_gauge(
-            &registry,
-            "weather_uv_index",
-            "Current UV index level",
-        )?;
+        let uv_index = register_gauge(&registry, "weather_uv_index", "Current UV index level")?;
         let solar_radiation = register_gauge(
             &registry,
             "weather_solar_radiation_wm2",
@@ -422,9 +413,8 @@ impl Metrics {
 }
 
 /// Global metrics instance - initialized once on first access
-static METRICS: Lazy<Result<Metrics, String>> = Lazy::new(|| {
-    Metrics::new().map_err(|e| e.to_string())
-});
+static METRICS: Lazy<Result<Metrics, String>> =
+    Lazy::new(|| Metrics::new().map_err(|e| e.to_string()));
 
 /// Get a reference to the global metrics, or return an error response
 fn metrics() -> Result<&'static Metrics, AppError> {
@@ -530,9 +520,9 @@ async fn main() -> Result<(), AppError> {
     // start the web server
     web::server(|| {
         web::App::new()
-            .route("/push/", web::get().to(handle_weather_data))  // weather data ingestion
-            .route("/metrics", web::get().to(handle_metrics))     // prometheus scrape endpoint
-            .route("/health", web::get().to(handle_health))       // health check for lb/k8s
+            .route("/push/", web::get().to(handle_weather_data)) // weather data ingestion
+            .route("/metrics", web::get().to(handle_metrics)) // prometheus scrape endpoint
+            .route("/health", web::get().to(handle_health)) // health check for lb/k8s
     })
     .bind(&config.bind_addr)?
     .run()
@@ -675,9 +665,13 @@ mod tests {
         // Test that error messages are formatted correctly
         // Use a type mismatch to force a parse error (tempf expects f32, not a string)
         let parse_err = AppError::ParseError(
-            serde_urlencoded::from_str::<WeatherData>("tempf=notanumber").unwrap_err()
+            serde_urlencoded::from_str::<WeatherData>("tempf=notanumber").unwrap_err(),
         );
-        assert!(parse_err.to_string().contains("failed to parse weather data"));
+        assert!(
+            parse_err
+                .to_string()
+                .contains("failed to parse weather data")
+        );
 
         let metric_err = AppError::MetricRegistrationError {
             name: "test_metric",
